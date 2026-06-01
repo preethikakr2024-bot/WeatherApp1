@@ -1,0 +1,86 @@
+﻿@page "/"
+@using BlazorApp10.Models
+@inject HttpClient Http
+
+<MudText Typo="Typo.h4" Class="mb-4">🌤 Weather App</MudText>
+
+<MudTextField @bind-Value="city"
+              Label="Enter City"
+              Variant="Variant.Outlined"
+              Class="mb-2" />
+
+<MudButton Variant="Variant.Filled"
+           Color="Color.Primary"
+           OnClick="GetWeather">
+    Get Weather
+</MudButton>
+
+<MudSpacer />
+
+@if (isLoading)
+{
+    <MudProgressCircular Indeterminate="true"
+                         Color="Color.Primary"
+                         Class="mt-4" />
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <MudAlert Severity="Severity.Error" Class="mt-4">
+        @errorMessage
+    </MudAlert>
+}
+else if (weather != null)
+{
+    <MudCard Class="mt-4 pa-4" Elevation="6">
+        <MudText Typo="Typo.h6">📍 @weather.name</MudText>
+
+        <MudText Typo="Typo.body1">
+            🌡 Temperature: @weather.main.temp °C
+        </MudText>
+
+        @if (weather.weather.Length > 0)
+        {
+            <MudText Typo="Typo.body2">
+                ☁ Condition: @weather.weather[0].description
+            </MudText>
+        }
+    </MudCard>
+}
+
+@code {
+    string city = "";
+
+    WeatherResponse? weather = null;
+    string errorMessage = "";
+    bool isLoading = false;
+
+    async Task GetWeather()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = "";
+            weather = null;
+
+            var apiKey = "0c96d91b611fac9219a7be00818067bb";
+
+            var url =
+            $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={apiKey}&units=metric";
+
+            weather = await Http.GetFromJsonAsync<WeatherResponse>(url);
+
+            if (weather == null)
+            {
+                errorMessage = "City not found!";
+            }
+        }
+        catch
+        {
+            errorMessage = "Error fetching weather data!";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -1,0 +1,28 @@
+﻿@page "/counter"
+@rendermode InteractiveServer
+<h1>Counter App</h1>
+<input type="text"
+       @bind="userName"
+       placeholder="Enter your name" />
+<br />
+<br />
+<p>Hello @userName 👋</p>
+<h3>Current Count: @count</h3>
+<button @onclick="IncreaseCount">
+    Increment
+</button>
+<button @onclick="ResetCount">
+    Reset
+</button>
+@code {
+    int count = 0;
+    string userName = "";
+    void IncreaseCount()
+    {
+        count++;
+    }
+    void ResetCount()
+    {
+        count = 0;
+    }
+}

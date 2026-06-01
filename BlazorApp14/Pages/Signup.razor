@@ -1,0 +1,37 @@
+﻿@page "/signup"
+
+@using BlazorApp14.Models
+@using BlazorApp14.Services
+@inject BlazorApp14.Services.AuthService AuthService
+@inject NavigationManager Nav
+
+<h3>Sign Up</h3>
+
+<input placeholder="Username" @bind="user.Username" />
+<br />
+<input placeholder="Password" type="password" @bind="user.Password" />
+<br />
+
+<button @onclick="RegisterUser">Sign Up</button>
+
+<p>@message</p>
+
+@code {
+    private UserModel user = new();
+    private string message = "";
+
+    void RegisterUser()
+    {
+        bool result = AuthService.Register(user);
+
+        if (result)
+        {
+            message = "Registration Successful!";
+            Nav.NavigateTo("/login");
+        }
+        else
+        {
+            message = "User already exists!";
+        }
+    }
+}

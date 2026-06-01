@@ -1,0 +1,186 @@
+﻿@page "/weather"
+@using BlazorApp15.Services
+@inject SupabaseService supabaseService
+@inject HttpClient http
+
+@if (!isReady)
+{
+    <p>Loading...</p>
+}
+else if (!supabaseService.IsLoggedIn())
+{
+    <p>Please login first...</p>
+}
+else
+{
+    <h3 style="text-align:center;">🌤 Weather Dashboard</h3>
+
+    <div style="text-align:center; margin-top:20px;">
+        <input @bind="city"
+               placeholder="Enter city"
+               style="padding:10px; width:200px; border-radius:8px;" />
+
+        <button @onclick="GetWeather"
+                style="margin-left:10px; padding:10px 20px; border-radius:8px;">
+            Get Weather
+        </button>
+    </div>
+
+    <br />
+
+    <!-- ⭐ SAVE BUTTON -->
+    <div style="text-align:center;">
+        <button @onclick="SaveFavorite"
+                style="padding:8px 15px; border-radius:8px;">
+            ⭐ Save as Favorite
+        </button>
+    </div>
+
+    <br />
+
+    <!-- 📊 FORECAST DISPLAY -->
+    @if (forecastList != null && forecastList.Count > 0)
+    {
+        <div style="display:flex; flex-wrap:wrap; justify-content:center;">
+            @foreach (var item in forecastList)
+            {
+                <div style="
+                                background:#e3f2fd;
+                                padding:15px;
+                                border-radius:10px;
+                                width:150px;
+                                margin:10px;
+                                text-align:center;
+                                box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+
+                    <p>@item.dt_txt</p>
+                    <p>🌡 @item.main?.temp °C</p>
+                    <p>☁ @item.weather?[0]?.main</p>
+                </div>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <p style="text-align:center; color:green;">@message</p>
+    }
+}
+
+@code {
+    bool isReady = false;
+    string city = "";
+    string message = "";
+
+    List<ForecastItem>? forecastList;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await supabaseService.Initialize();
+            isReady = true;
+            StateHasChanged();
+        }
+    }
+
+    async Task GetWeather()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(city))
+            {
+                message = "Please enter a city";
+                return;
+            }
+
+            var apiKey = "0c96d91b611fac9219a7be00818067bb";
+
+            var url = $"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={apiKey}&units=metric";
+
+            var result = await http.GetFromJsonAsync<ForecastResponse>(url);
+
+            if (result?.list != null)
+            {
+                forecastList = result.list.Take(5).ToList();
+                message = "";
+            }
+            else
+            {
+                message = "No forecast data";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = "Error: " + ex.Message;
+        }
+    }
+
+    // 🔥 FINAL SAVE TO MONGODB
+    async Task SaveFavorite()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(city) || forecastList == null)
+            {
+                message = "Get weather first";
+                return;
+            }
+
+            var condition = forecastList.FirstOrDefault()?.weather?[0]?.main ?? "Unknown";
+
+            var user = supabaseService.GetUser();
+
+            if (user == null)
+            {
+                message = "User not logged in";
+                return;
+            }
+
+            var data = new
+            {
+                userId = user.Id,
+                city = city,
+                weather = condition
+            };
+
+            var response = await http.PostAsJsonAsync("https://localhost:5001/api/favorite", data);
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = $"⭐ {city} saved to MongoDB!";
+            }
+            else
+            {
+                message = "Failed to save data";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = "Error: " + ex.Message;
+        }
+    }
+
+    // 📊 MODELS
+    public class ForecastResponse
+    {
+        public List<ForecastItem>? list { get; set; }
+    }
+
+    public class ForecastItem
+    {
+        public Main? main { get; set; }
+        public WeatherInfo[]? weather { get; set; }
+        public string? dt_txt { get; set; }
+    }
+
+    public class Main
+    {
+        public double? temp { get; set; }
+    }
+
+    public class WeatherInfo
+    {
+        public string? main { get; set; }
+    }
+}

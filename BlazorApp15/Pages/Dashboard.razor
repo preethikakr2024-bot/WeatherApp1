@@ -1,0 +1,149 @@
+﻿@page "/dashboard"
+@using BlazorApp15.Services
+@inject SupabaseService supabaseService
+@inject NavigationManager Navigation
+@inject HttpClient http
+
+<h3 style="text-align:center;">📊 Dashboard</h3>
+
+@if (!isReady)
+{
+    <p style="text-align:center;">Loading...</p>
+}
+else if (!supabaseService.IsLoggedIn())
+{
+    <p style="color:red; text-align:center;">⚠️ Please login first.</p>
+}
+else
+{
+    <h4 style="text-align:center;">
+        👋 Welcome User
+    </h4>
+
+    <br />
+
+    <!-- 🌆 FAVORITE CITY -->
+    <div style="
+                background:#e3f2fd;
+                padding:20px;
+                border-radius:12px;
+                width:300px;
+                margin:auto;
+                text-align:center;
+                box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+
+        <h5>📍 Favorite City</h5>
+
+        <h3 style="color:#2196F3;">
+            @(string.IsNullOrEmpty(favCity) ? "Not Set" : favCity)
+        </h3>
+    </div>
+
+    <br />
+
+    <!-- 🌤 FAVORITE WEATHER -->
+    <div style="
+                background:#fff3e0;
+                padding:20px;
+                border-radius:12px;
+                width:300px;
+                margin:auto;
+                text-align:center;
+                box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+
+        <h5>🌤 Favorite Weather</h5>
+
+        <h3 style="color:#ff9800;">
+            @(string.IsNullOrEmpty(favWeather) ? "Not Set" : favWeather)
+        </h3>
+    </div>
+
+    <br />
+
+    <!-- NAVIGATION -->
+    <div style="text-align:center;">
+        <button @onclick="GoToWeather"
+                style="
+                            padding:10px 20px;
+                            background-color:#4CAF50;
+                            color:white;
+                            border:none;
+                            border-radius:8px;">
+            🔍 Go to Weather Page
+        </button>
+    </div>
+
+    <br />
+
+    <!-- LOGOUT -->
+    <div style="text-align:center;">
+        <button @onclick="Logout"
+                style="
+                            padding:10px 20px;
+                            background-color:#e53935;
+                            color:white;
+                            border:none;
+                            border-radius:8px;">
+            🚪 Sign Out
+        </button>
+    </div>
+}
+
+@code {
+    bool isReady = false;
+
+    string favCity = "";
+    string favWeather = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await supabaseService.Initialize();
+
+            var user = supabaseService.GetUser();
+
+            if (user != null)
+            {
+                try
+                {
+                    var data = await http.GetFromJsonAsync<UserFavorite>(
+                        $"https://localhost:5001/api/favorite/{user.Id}");
+
+                    if (data != null)
+                    {
+                        favCity = data.City ?? "";
+                        favWeather = data.Weather ?? "";
+                    }
+                }
+                catch
+                {
+                    favCity = "";
+                    favWeather = "";
+                }
+            }
+
+            isReady = true;
+            StateHasChanged();
+        }
+    }
+
+    void GoToWeather()
+    {
+        Navigation.NavigateTo("/weather");
+    }
+
+    async Task Logout()
+    {
+        await supabaseService.Logout();
+        Navigation.NavigateTo("/login", true);
+    }
+
+    // ✅ MODEL (REQUIRED)
+    public class UserFavorite
+    {
+        public string? UserId { get; set; }
+        public string? City { get; set; }
+        public string? Weather { get; set; }
+    }
+}

@@ -1,0 +1,75 @@
+﻿@using Microsoft.AspNetCore.Components
+
+<div class="card p-3 border">
+
+    <h2>Student Details</h2>
+
+    <p><b>Name:</b> @Name</p>
+    <p><b>Age:</b> @Age</p>
+    <p><b>Marks:</b> @Marks</p>
+    <p><b>Active:</b> @IsActive</p>
+    <p><b>Joining Date:</b> @JoiningDate</p>
+
+    <hr />
+
+    <h3>Custom Object</h3>
+
+    <p>@StudentData.Name</p>
+    <p>@StudentData.Age</p>
+
+    <hr />
+
+    <h3>Subjects List</h3>
+
+    <ul>
+        @foreach (var subject in Subjects)
+        {
+            <li>@subject</li>
+        }
+    </ul>
+
+    <hr />
+
+    <button class="btn btn-primary"
+            @onclick="OnButtonClick">
+        Click Me
+    </button>
+
+    <hr />
+
+    <h3>Child Content</h3>
+
+    @ChildContent
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string Name { get; set; } = "";
+
+    [Parameter]
+    public int Age { get; set; }
+
+    [Parameter]
+    public double Marks { get; set; }
+
+    [Parameter]
+    public bool IsActive { get; set; }
+
+    [Parameter]
+    public DateTime JoiningDate { get; set; }
+
+    // IMPORTANT CHANGE HERE
+    [Parameter]
+    public AllParametersDemo.Student StudentData { get; set; } = new();
+
+    [Parameter]
+    public List<string> Subjects { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnButtonClick { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

@@ -1,0 +1,52 @@
+@page "/login"
+@using signup.Models
+@using LoginService.Services
+@inject SignInService LoginService 
+@inject NavigationManager NavigationManager
+
+
+<PageTitle>Login</PageTitle>
+
+<table>
+    <tr>
+        <td>Enter Email Id</td>
+        <td><input type="text" placeholder="abc@gmail.com" @bind="email"></td>
+    </tr>
+    <tr>
+        <td>Enter Password</td>
+        <td><input type="Password" placeholder="abcd123*" @bind="password"></td>
+    </tr>
+</table>
+
+<button style="width: 240pt;" @onclick="SignIn">Sign Up</button>
+
+<p>@message</p>
+
+@code{
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string message = string.Empty;
+    private RegisterModel login = new RegisterModel();
+    private async Task SignIn()
+    {
+        login.Email = email;
+        login.Password = password;
+        try{
+            bool result = await LoginService.CheckDataAsync(login);
+            if(result)
+            {
+                message="success";
+                NavigationManager.NavigateTo("/weather");
+            }
+            else{
+                message="failed";
+            }
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error: {ex}");
+        }
+    }
+
+}
+

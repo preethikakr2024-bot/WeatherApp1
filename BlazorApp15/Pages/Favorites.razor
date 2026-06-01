@@ -1,0 +1,54 @@
+﻿@page "/favorites"
+@using BlazorApp15.Services
+@inject AuthService authService
+
+<h3>My Favorites</h3>
+
+@if (!authService.IsLoggedIn)
+{
+    <p>Please login first.</p>
+}
+else
+{
+    <EditForm Model="@model" OnValidSubmit="Save">
+
+        <InputText @bind-Value="model.City" placeholder="Favorite City" />
+        <InputText @bind-Value="model.Weather" placeholder="Favorite Weather" />
+
+        <button type="submit">Save</button>
+
+    </EditForm>
+
+    <hr />
+
+    <p><b>Saved City:</b> @authService.CurrentUser?.FavoriteCity</p>
+    <p><b>Saved Weather:</b> @authService.CurrentUser?.FavoriteWeather</p>
+}
+
+@code {
+    private FavModel model = new();
+
+    protected override void OnInitialized()
+    {
+        if (authService.CurrentUser != null)
+        {
+            model.City = authService.CurrentUser.FavoriteCity;
+            model.Weather = authService.CurrentUser.FavoriteWeather;
+        }
+    }
+
+    private void Save()
+    {
+        authService.SaveFavorites(
+            model.City,
+            model.Weather,
+            new List<string>()   // ✅ empty forecast
+        );
+    }
+
+    public class FavModel
+    {
+        public string City { get; set; } = "";
+        public string Weather { get; set; } = "";
+    }
+}

@@ -1,0 +1,30 @@
+﻿@page "/weather"
+@rendermode InteractiveServer
+
+<h1>Weather Checker</h1>
+
+<input type="text"
+       @bind="city"
+       placeholder="Enter city name" />
+
+<br />
+<br />
+
+<button @onclick="CheckWeather">
+    Check Weather
+</button>
+
+<h3>@result</h3>
+
+@code {
+
+    string city = "";
+
+    string result = "";
+
+    void CheckWeather()
+    {
+        result = $"The weather in {city} is sunny ☀️";
+    }
+
+}

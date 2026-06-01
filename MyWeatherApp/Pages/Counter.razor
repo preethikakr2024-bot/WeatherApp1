@@ -1,0 +1,49 @@
+﻿@page "/counter"
+@using signup.Models
+@using SignUpService.Services
+@inject RegisterService SignUpService
+@inject NavigationManager NavigationManager
+
+
+<PageTitle>Sign Up</PageTitle>
+
+<table>
+    <tr>
+        <td>Enter Email Id</td>
+        <td><input type="text" placeholder="abc@gmail.com" @bind="email"></td>
+    </tr>
+    <tr>
+        <td>Enter Password</td>
+        <td><input type="Password" placeholder="abcd123*" @bind="password"></td>
+    </tr>
+</table>
+
+<button style="width: 240pt;" @onclick="SignUp">Sign Up</button>
+
+<p>@message</p>
+
+
+@code {
+    private string? email;
+    private string? password;
+    private string? message;
+    private RegisterModel register = new RegisterModel();
+    public async Task SignUp()
+    {
+        register.Email = email;
+        register.Password = password;
+        try
+        {
+            await SignUpService.InsertDataAsync(register);
+            message = "Signup Successful";
+
+            NavigationManager.NavigateTo("/login");
+        }
+        catch (Exception e)
+        {
+            message = $"Error: {e}";
+        }
+    }
+
+
+}

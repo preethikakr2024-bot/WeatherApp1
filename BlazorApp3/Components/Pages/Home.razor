@@ -1,0 +1,26 @@
+﻿@page "/"
+
+<h1>Student Details</h1>
+
+<input @bind="name" placeholder="Enter Name" />
+
+<br />
+<br />
+
+<button @onclick="ShowMessage">
+    Submit
+</button>
+
+<p>@message</p>
+
+@code {
+
+    string name = "";
+    string message = "";
+
+    void ShowMessage()
+    {
+        message = "Hello " + name;
+    }
+
+}

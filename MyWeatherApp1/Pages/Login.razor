@@ -1,0 +1,126 @@
+@page "/"
+@layout LoginLayout
+@inject NavigationManager NavigationManager
+@using SignModel.Models
+@using SigninService.Services
+@inject LoginService SigninService
+
+
+<link rel="stylesheet" href="css/Login.css">
+
+<MudPaper Class="login-box mx-auto my-12 p-6 rounded-xl shadow-md" Elevation="6">
+    <MudText Typo="Typo.h5" Class="text-center mb-4 text-primary">Login</MudText>
+
+    <MudTextField @bind-Value="email" Label="Email Id" Variant="Variant.Outlined" Placeholder="YourEmail@gmail.com"
+        Class="mb-3" />
+
+    <MudTextField @bind-Value="password" Label="Password" Variant="Variant.Outlined" Placeholder="YourName123*"
+        InputType="InputType.Password" Class="mb-3" />
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoginAsync" Class="btn1 w-full mb-2">Login
+    </MudButton>
+
+    <MudText Typo="Typo.body2" Class="text-error message1">@message</MudText>
+
+    <MudText Typo="Typo.body2" Align="Align.Center">
+        Didn't have an account?
+        @* <MudText Link="true" Class="" OnClick="Signup"> Create One</MudText> *@
+        <MudLink Href="/signup" Class="btn11"><span class="acc">Create account</span></MudLink>
+    </MudText>
+</MudPaper>
+
+@code {
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string message = string.Empty;
+    private RegisterModel login = new RegisterModel();
+    public void Signup()
+    {
+        NavigationManager.NavigateTo("/signup");
+    }
+    private async Task LoginAsync()
+    {
+        try
+        {
+            login.Email = email;
+            login.Password = password;
+            bool result = await SigninService.CheckDataAsync(login);
+            if (result)
+            {
+                Console.WriteLine("Successful Login");
+                //here we have to pass the email to forecast page
+                NavigationManager.NavigateTo("/forecast");
+            }
+            else
+            {
+                message = "Login failed something went wrong";
+            }
+
+        }
+        catch (Exception ex)
+        {
+            message = $"Error : {ex}";
+        }
+
+    }
+
+}
+
+<style>
+    .acc {
+        color: blue;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to bottom right, #b3e5fc, #e1f5fe, #ffffff);
+        background-attachment: fixed;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .login-box {
+        background-color: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        animation: slideUp 0.5s ease-in-out;
+    }
+
+    slideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .btn1 {
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn1:hover {
+        background-color: #0277bd;
+    }
+
+    .text-error {
+        color: red;
+    }
+
+    .btn11 {
+        font-weight: bold;
+        color: #0288d1;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .btn11:hover {
+        color: #01579b;
+        text-decoration: underline;
+    }
+</style>

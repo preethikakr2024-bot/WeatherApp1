@@ -1,0 +1,22 @@
+﻿@page "/condition"
+@rendermode InteractiveServer
+
+<Component />
+
+<p>Count: @count</p>
+
+@if (count >= 5)
+{
+    <h3>🎉 Count reached 5!</h3>
+}
+
+@code {
+
+    int count = 0;
+
+    void Increase()
+    {
+        count++;
+    }
+
+}

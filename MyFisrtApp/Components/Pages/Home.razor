@@ -1,0 +1,14 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+
+<MudButton @OnClick="change">display</MudButton>
+<MudText>hello</MudText>
+@code{
+   
+    private void change()
+    {
+        message = "Hello from";
+    }
+}

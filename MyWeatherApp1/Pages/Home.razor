@@ -1,0 +1,127 @@
+﻿@page "/home"
+@layout MudMainLayout   
+@inject HttpClient Http
+
+<h3>Weather Forecast</h3>
+
+<input type="text" @bind="cityName" placeholder="Enter city name" />
+<button @onclick="GetWeather">Get Weather</button>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (errorMessage != null)
+{
+    <p style="color:red">@errorMessage</p>
+}
+else if (forecastList != null && forecastList.Count > 0)
+{
+    <h4>City: @cityName</h4>
+
+    <table style="width:100%; border-collapse: collapse;" border="1">
+        <thead>
+            <tr style="background-color: lightgray;">
+                <th>Date</th>
+                <th>Temperature (°C)</th>
+                <th>Humidity (%)</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var day in forecastList.Take(4))
+            {
+                <tr>
+                    <td>@day.Date.ToString("dd-MM-yyyy")</td>
+                    <td>@day.TempCelsius</td>
+                    <td>@day.Humidity</td>
+                    <td>@day.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string cityName = "";
+    private bool isLoading = false;
+    private string errorMessage = null;
+
+    private List<WeatherForecast> forecastList = new();
+
+    private async Task GetWeather()
+    {
+        forecastList.Clear();
+        if (string.IsNullOrWhiteSpace(cityName))
+        {
+            errorMessage = "Please enter a city name.";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+        forecastList.Clear();
+
+        try
+        {
+            string apiKey = "d44e84653bedfb2f9682a4874783732d"; // replace with your key
+            string url = $"https://api.openweathermap.org/data/2.5/forecast?q={cityName}&appid={apiKey}&units=metric";
+
+            var response = await Http.GetFromJsonAsync<ForecastResponse>(url);
+
+            if (response != null && response.list != null)
+            {
+                // Group forecast per day, take first data point of each day
+                var grouped = response.list
+                    .GroupBy(x => x.dt_txt.Substring(0, 10))
+                    .Select(g => g.First())
+                    .Take(4); // Today + next 3 days
+
+                forecastList = grouped.Select(x => new WeatherForecast
+                {
+                    Date = DateTime.Parse(x.dt_txt),
+                    TempCelsius = x.main.temp,
+                    Humidity = x.main.humidity,
+                    Description = x.weather.FirstOrDefault()?.description ?? ""
+                }).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error fetching weather: {ex.Message}";
+        }
+
+        isLoading = false;
+    }
+
+    public class WeatherForecast
+    {
+        public DateTime Date { get; set; }
+        public double TempCelsius { get; set; }
+        public int Humidity { get; set; }
+        public string Description { get; set; } = "";
+    }
+
+    public class ForecastResponse
+    {
+        public List<ForecastItem> list { get; set; } = new();
+    }
+
+    public class ForecastItem
+    {
+        public MainData main { get; set; } = new();
+        public List<WeatherData> weather { get; set; } = new();
+        public string dt_txt { get; set; } = "";
+    }
+
+    public class MainData
+    {
+        public double temp { get; set; }
+        public int humidity { get; set; }
+    }
+
+    public class WeatherData
+    {
+        public string description { get; set; } = "";
+    }
+}

@@ -1,0 +1,142 @@
+﻿@page "/"
+@using System.Net.Http.Json
+@using System.Linq
+@inject HttpClient Http
+
+<PageTitle>Weather App</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-5">
+
+    <MudText Typo="Typo.h4" GutterBottom="true">
+        🌤️ 5-Day Weather Forecast
+    </MudText>
+
+    <!-- Input -->
+    <MudTextField @bind-Value="city" Label="Enter City" Variant="Variant.Outlined" />
+
+    <!-- Button -->
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Class="mt-2"
+               OnClick="GetForecast">
+        Get Forecast
+    </MudButton>
+
+    <!-- Loading -->
+    @if (loading)
+    {
+        <MudProgressCircular Indeterminate="true" Class="mt-4" />
+    }
+
+    <!-- Error -->
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-4">
+            @error
+        </MudAlert>
+    }
+
+    <!-- Result -->
+    @if (forecastList != null && forecastList.Any())
+    {
+        <MudGrid Class="mt-4">
+            @foreach (var item in forecastList)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Class="pa-3">
+                        <MudCardContent>
+
+                            <MudText Typo="Typo.subtitle1">
+                                @(item.dt_txt ?? "No Date")
+                            </MudText>
+
+                            <MudText Typo="Typo.h6">
+                                🌡️ @(item.main != null ? item.main.temp : 0) °C
+                            </MudText>
+
+                            <MudText>
+                                ☁️ @(item.weather != null && item.weather.Count > 0 
+                                    ? item.weather[0].description 
+                                    : "No Data")
+                            </MudText>
+
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+
+</MudContainer>
+
+@code {
+    string city = string.Empty;
+    bool loading = false;
+    string? error = null;
+
+    ForecastResponse? result = null;
+    List<ForecastItem>? forecastList = null;
+
+    async Task GetForecast()
+    {
+        try
+        {
+            loading = true;
+            error = null;
+
+            var url = $"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid=0c96d91b611fac9219a7be00818067bb&units=metric";
+
+            var response = await Http.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                error = $"API Error: {response.StatusCode}";
+                return;
+            }
+
+            result = await response.Content.ReadFromJsonAsync<ForecastResponse>();
+
+            if (result?.list != null)
+            {
+                forecastList = result.list
+                    .Where((item, index) => index % 8 == 0)
+                    .Take(5)
+                    .ToList();
+            }
+            else
+            {
+                error = "No data found for this city.";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    public class ForecastResponse
+    {
+        public List<ForecastItem>? list { get; set; }
+    }
+
+    public class ForecastItem
+    {
+        public string? dt_txt { get; set; }
+        public Main? main { get; set; }
+        public List<Weather>? weather { get; set; }
+    }
+
+    public class Main
+    {
+        public double temp { get; set; }
+    }
+
+    public class Weather
+    {
+        public string? description { get; set; }
+    }
+}

@@ -1,0 +1,119 @@
+﻿@page "/"
+@using MudBlazor
+<PageTitle>Home</PageTitle>
+
+<MudButton @onclick="GetForecast" Variant="Variant.Filled" Color="Color.Primary">Get 3-Day Forecast</MudButton>
+<p>@errorMessage</p>
+
+@if (forecastList?.Any() == true)
+{
+    <MudTable Items="forecastList">
+        <HeaderContent>
+            <MudTh>Date</MudTh>
+            <MudTh>Temp (°C)</MudTh>
+            <MudTh>Humidity (%)</MudTh>
+            <MudTh>Condition</MudTh>
+            <MudTh>Wind Speed (m/s)</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Date</MudTd>
+            <MudTd>@context.Temp</MudTd>
+            <MudTd>@context.Humidity</MudTd>
+            <MudTd>@context.Condition</MudTd>
+            <MudTd>@context.WindSpeed</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+@if (forecastList?.Any() == true)
+{
+    <MudText>@forecastList[0].Date</MudText>
+}
+
+@code {
+    private string? errorMessage;
+    private List<DailyForecast> forecastList = new();
+
+    private async Task GetForecast()
+    {
+        try
+        {
+            forecastList.Clear();
+            errorMessage = null;
+
+            string apiKey = "d44e84653bedfb2f9682a4874783732d";
+            string city = "vellore";
+            string url = $"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={apiKey}&units=metric";
+
+            var http = new HttpClient();
+            var result = await http.GetFromJsonAsync<ForecastResponse>(url);
+
+            var grouped = result!.List!
+                .GroupBy(item => DateTimeOffset.FromUnixTimeSeconds(item.Dt).Date)
+                .Take(3);
+
+            foreach (var group in grouped)
+            {
+                // Pick 12:00 PM entry if exists, otherwise take average
+                var noonEntry = group.FirstOrDefault(x =>
+                    DateTimeOffset.FromUnixTimeSeconds(x.Dt).Hour == 12);
+
+                var entry = noonEntry ?? group.First();
+
+                forecastList.Add(new DailyForecast
+                {
+                    Date = DateTimeOffset.FromUnixTimeSeconds(entry.Dt).ToString("yyyy-MM-dd"),
+                    Temp = entry.Main!.Temp,
+                    Humidity = entry.Main.Humidity,
+                    Condition = entry.Weather?.FirstOrDefault()?.Main,
+                    WindSpeed = entry.Wind.Speed
+                });
+            }
+            Console.WriteLine(forecastList[0].Date);
+        }
+        catch
+        {
+            errorMessage = "City not found or API error.";
+        }
+    }
+
+    // ---------------- Models --------------------
+
+    public class ForecastResponse
+    {
+        public List<ForecastItem>? List { get; set; }
+    }
+
+    public class ForecastItem
+    {
+        public int Dt { get; set; }
+        public MainInfo? Main { get; set; }
+        public List<WeatherInfo>? Weather { get; set; }
+        public WindInfo? Wind { get; set; }
+    }
+
+    public class MainInfo
+    {
+        public float Temp { get; set; }
+        public int Humidity { get; set; }
+    }
+
+    public class WeatherInfo
+    {
+        public string? Main { get; set; }
+        public string? Description { get; set; }
+    }
+
+    public class WindInfo
+    {
+        public double Speed { get; set; }
+    }
+
+    public class DailyForecast
+    {
+        public string? Date { get; set; }
+        public double Temp { get; set; }
+        public int Humidity { get; set; }
+        public string? Condition { get; set; }
+        public double WindSpeed { get; set; }
+    }
+}

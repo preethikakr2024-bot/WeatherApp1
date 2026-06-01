@@ -1,0 +1,17 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+
+    <MudAppBar Elevation="4">
+        <MudText Typo="Typo.h6">🌦 Weather App</MudText>
+    </MudAppBar>
+
+    <MudMainContent Class="p-4">
+        @Body
+    </MudMainContent>
+
+</MudLayout>

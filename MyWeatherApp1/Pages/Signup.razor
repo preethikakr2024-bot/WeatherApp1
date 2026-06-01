@@ -1,0 +1,135 @@
+@page "/signup"
+@layout LoginLayout
+@using SignModel.Models
+@using CreateService.Services
+@inject SignUpService CreateService
+@inject NavigationManager NavigationManager
+@using MudBlazor
+@using MudBlazor.Services
+
+    <link rel="stylesheet" href="css/signup.css">
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center mt-12">
+    <MudPaper Elevation="10" Class="p-6 rounded-3">
+
+        <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">Create Account</MudText>
+
+        <MudTextField Label="Name"
+                      @bind-Value="name"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Person"
+                      Class="mb-3"
+                      Required="true" />
+
+        <MudTextField Label="Email"
+                      @bind-Value="email"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Email"
+                      Class="mb-3"
+                      Required="true"
+                      Immediate="true"
+                      InputType="InputType.Email" />
+
+        <MudTextField Label="Password"
+                      @bind-Value="password"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Lock"
+                      Class="mb-4"
+                      InputType="InputType.Password"
+                      Required="true" />
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Class="bn"
+                   OnClick="SignUpAsync"
+                   FullWidth="true">
+            Sign Up
+        </MudButton>
+
+        <MudText Color="Color.Error" Typo="Typo.subtitle2" Class="mt-3">
+            @message
+        </MudText>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string name = string.Empty;
+    private string message = string.Empty;
+    private RegisterModel register = new RegisterModel();
+
+    private async Task SignUpAsync()
+    {
+        try
+        {
+            register.Email = email;
+            register.Password = password;
+            bool result = await CreateService.CreateDataAsync(register, name);
+            if (result)
+            {
+                Console.WriteLine("Successful signup account created");
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                message = $"wrong credentials try again";
+                Console.WriteLine("Error: Failed SignUp");
+            }
+        }
+        catch (Exception Ex)
+        {
+            Console.WriteLine($"Error: {Ex.Message}");
+            message = "Something went wrong try again";
+        }
+    }
+}
+<style>
+    body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to top right, #a7dff1, #e0f7fa, #ffffff);
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.MudPaper {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 0.5s ease-in-out;
+}
+
+fadeInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.MudTextField {
+    border-radius: 8px;
+}
+
+.bn {
+    font-weight: bold;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.bn:hover {
+    background-color: #0288d1;
+}
+
+.MudText {
+    text-align: center;
+}
+
+</style>

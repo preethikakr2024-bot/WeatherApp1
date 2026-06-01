@@ -1,0 +1,76 @@
+﻿@page "/myweather"
+@using System.Net.Http.Json
+
+<h3>Weather App</h3>
+
+<input @bind="city" placeholder="Enter city name" />
+<button @onclick="GetWeather">Get Weather</button>
+
+@if (weather != null)
+{
+    <p><b>City:</b> @weather.City</p>
+    <p><b>Temperature:</b> @weather.Temp °C</p>
+    <p><b>Condition:</b> @weather.Description</p>
+}
+
+@code {
+    string city;
+    WeatherModel weather;
+
+    async Task GetWeather()
+    {
+        try
+        {
+            var http = new HttpClient();
+
+            var url = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid=YOUR_API_KEY&units=metric";
+
+            var result = await http.GetFromJsonAsync<WeatherApiResponse>(url);
+
+            if (result != null)
+            {
+                weather = new WeatherModel
+                {
+                    City = result.name,
+                    Temp = result.main.temp,
+                    Description = result.weather[0].description
+                };
+            }
+        }
+        catch
+        {
+            weather = new WeatherModel
+            {
+                City = city,
+                Temp = 0,
+                Description = "Error fetching data"
+            };
+        }
+    }
+
+    // 🔹 Display Model
+    public class WeatherModel
+    {
+        public string City { get; set; }
+        public double Temp { get; set; }
+        public string Description { get; set; }
+    }
+
+    // 🔹 API Response Models
+    public class WeatherApiResponse
+    {
+        public string name { get; set; }
+        public Main main { get; set; }
+        public Weather[] weather { get; set; }
+    }
+
+    public class Main
+    {
+        public double temp { get; set; }
+    }
+
+    public class Weather
+    {
+        public string description { get; set; }
+    }
+}

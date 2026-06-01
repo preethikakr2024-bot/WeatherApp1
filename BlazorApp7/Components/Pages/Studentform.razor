@@ -1,0 +1,30 @@
+﻿@page "/studentform"
+@rendermode InteractiveServer
+<h1>Student Form</h1>
+<label>Name:</label>
+<br />
+<input @bind="studentName"
+       placeholder="Enter Name" />
+<br />
+<br />
+<label>Department:</label>
+<br />
+<input @bind="department"
+       placeholder="Enter Department" />
+<br />
+<br />
+<button @onclick="SubmitForm">
+    Submit
+</button>
+<br />
+<br />
+<h3>@message</h3>
+@code {
+    string studentName = "";
+    string department = "";
+    string message = "";
+    void SubmitForm()
+    {
+        message = $"Hello {studentName} from {department}";
+    }
+}

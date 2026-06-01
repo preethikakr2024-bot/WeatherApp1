@@ -1,0 +1,103 @@
+﻿@page "/login"
+@layout HomeLayout
+@using UDService.Services
+@inject Userdata UDService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Login</PageTitle>
+<style>
+    /* Make the whole login box wider and shorter */
+    .login-box {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem 2.5rem;
+        width: 100%;
+        max-width: 400px;
+        /* adjust width here as needed */
+        box-shadow: 0 8px 24px rgba(0, 123, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        text-align: center;
+    }
+
+    /* Make the input fields longer horizontally */
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        max-width: 300px;
+        padding: 14px;
+        font-size: 16px;
+        border-radius: 10px;
+        border: 1px solid #999;
+        background-color: #e8f0fe;
+    }
+
+    /* Center and stretch the login button */
+    .btn1 {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        font-weight: bold;
+        background: linear-gradient(to right, #2196f3, #6dd5fa);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn1:hover {
+        background: linear-gradient(to right, #1e88e5, #4fc3f7);
+        transform: scale(1.02);
+    }
+
+    .btn11 {
+        color: #1e88e5;
+    }
+
+    .wbg {
+        background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+        background-size: cover;
+        min-height: 100vh;
+        padding: 2rem;
+    }
+</style>
+<div class="wbg">
+    <MudContainer Class="body">
+        <MudPaper Class="login-box mx-auto my-12 p-6 rounded-xl shadow-md" Elevation="6">
+            <MudText Typo="Typo.h5" Class="text-center mb-4 text-primary">Login</MudText>
+
+            <MudTextField @bind-Value="email" Label="Email Id" Variant="Variant.Outlined"
+                Placeholder="YourEmail@gmail.com" Class="mb-3" />
+
+            <MudTextField @bind-Value="password" Label="Password" Variant="Variant.Outlined" Placeholder="YourName123*"
+                InputType="InputType.Password" Class="mb-3" />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoginAsync" Class="btn1 w-full mb-2">
+                Login
+            </MudButton>
+
+            <MudText Typo="Typo.body2" Class="text-error message1">@message</MudText>
+
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                Didn't have an account?
+                @* <MudText Link="true" Class="" OnClick="Signup"> Create One</MudText> *@
+                <MudLink Href="/signup" Class="btn11"><span class="acc">Create account</span></MudLink>
+            </MudText>
+        </MudPaper>
+    </MudContainer>
+</div>
+@code {
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string message = string.Empty;
+    public void Signup()
+    {
+        NavigationManager.NavigateTo("/signup");
+    }
+    public async Task LoginAsync()
+    {
+        await Task.Delay(100);
+    }
+}

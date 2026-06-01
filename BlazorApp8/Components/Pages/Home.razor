@@ -1,0 +1,53 @@
+﻿@page "/"
+@inject HttpClient Http
+
+<MudText Typo="Typo.h4">Weather App</MudText>
+
+<MudTextField @bind-value="city" Label="Enter City" />
+
+<MudButton OnClick="GetWeather" Color="Color.Primary" Variant="Variant.Filled">
+    Get Weather
+</MudButton>
+
+<MudText>@result</MudText>
+
+@code {
+    string city = "";
+    string result = "";
+
+    async Task GetWeather()
+    {
+        try
+        {
+            var apiKey = "0c96d91b611fac9219a7be00818067bb";
+            var url = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={apiKey}&units=metric";
+
+            var response = await Http.GetFromJsonAsync<WeatherResponse>(url);
+
+            if (response != null)
+            {
+                result = $"Temp: {response.main.temp}°C | {response.weather[0].description}";
+            }
+        }
+        catch
+        {
+            result = "Error fetching weather";
+        }
+    }
+
+    public class WeatherResponse
+    {
+        public Main main { get; set; } = new();
+        public Weather[] weather { get; set; } = Array.Empty<Weather>();
+    }
+
+    public class Main
+    {
+        public double temp { get; set; }
+    }
+
+    public class Weather
+    {
+        public string description { get; set; } = "";
+    }
+}

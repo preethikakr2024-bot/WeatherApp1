@@ -1,0 +1,44 @@
+﻿@page "/login"
+@using BlazorApp15.Services
+@inject SupabaseService supabaseService
+@inject NavigationManager nav
+
+<div style="display:flex;flex-direction:column;gap:10px;max-width:300px;margin:auto;margin-top:100px;">
+
+    <input @bind="email" placeholder="Email" />
+
+    <input @bind="password" type="password" placeholder="Password" />
+
+    <button @onclick="LoginUser">Login</button>
+
+    <p>@message</p>
+
+</div>
+
+@code {
+    string email = "";
+    string password = "";
+    string message = "";
+
+    async Task LoginUser()
+    {
+        try
+        {
+            var session = await supabaseService.Login(email, password);
+
+            if (session != null)
+            {
+                message = "Login successful!";
+                nav.NavigateTo("/weather");
+            }
+            else
+            {
+                message = "Invalid login";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = "Login failed: " + ex.Message;
+        }
+    }
+}

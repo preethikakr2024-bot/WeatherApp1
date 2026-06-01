@@ -1,0 +1,68 @@
+﻿@page "/"
+@using WeatherApp.Models
+@inject HttpClient Http
+
+<h3>🌤 Weather App</h3>
+
+<input @bind="city" placeholder="Enter city" />
+<button @onclick="GetWeather">Get Weather</button>
+
+<br />
+<br />
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color:red">@errorMessage</p>
+}
+else if (weather != null)
+{
+    <p><b>City:</b> @weather.name</p>
+    <p><b>Temperature:</b> @weather.main.temp °C</p>
+    <p><b>Condition:</b> @weather.weather[0].description</p>
+}
+
+@code {
+    // ✅ Input value
+    string city = "";
+
+    // ✅ Weather data
+    WeatherResponse? weather;
+
+    // ✅ Extra states
+    string errorMessage = "";
+    bool isLoading = false;
+
+    // ✅ API call method
+    async Task GetWeather()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = "";
+            weather = null;
+
+            var apiKey = "0c96d91b611fac9219a7be00818067bb"; // 🔴 Replace with your API key
+
+            var url = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={apiKey}&units=metric";
+
+            weather = await Http.GetFromJsonAsync<WeatherResponse>(url);
+
+            if (weather == null)
+            {
+                errorMessage = "City not found!";
+            }
+        }
+        catch
+        {
+            errorMessage = "Error fetching weather data!";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

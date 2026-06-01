@@ -1,0 +1,371 @@
+﻿@page "/forecast"
+@using SigninService.Services;
+@layout LoginLayout;
+@inject LoginService SigninService;
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@using MudBlazor;
+@using MudBlazor.Services;
+
+<PageTitle>Weather</PageTitle>
+
+<div class="weather-container">
+    @* <h2 class="welcome-text">Hi, @UserName! Glad to see you back on the Weather App ☀️</h2> *@
+    <h2 class="welcome-text">
+        Welcome back, <span class="highlight-name">@UserName</span>!
+        <span class="subtitle">Ready to check the weather? ☀️🌦️</span>
+    </h2>
+    <br>
+    <div class="input-section">
+        <MudText Typo="Typo.h4" Class="input-label">🌍 Type a city to get the forecast:</MudText>
+        <MudTextField @bind-Value="cityName" Placeholder="Enter city name" Variant="Variant.Outlined"
+            Class="city-input" />
+        <div class="button-group">
+            <MudButton OnClick="GetWeather" Variant="Variant.Filled" Color="Color.Primary" Class="action-btn">Get
+                Weather</MudButton>
+            @* <MudButton OnClick="SaveFavourites" Variant="Variant.Filled" Color="Color.Secondary" Class="action-btn">Save Favourite</MudButton> *@
+            @* <MudButton OnClick="LoadFavourites" Variant="Variant.Filled" Color="Color.Secondary" Class="action-btn">Load Favourite</MudButton> *@
+        </div>
+    </div>
+
+    <MudText Typo="Typo.body2" Color="Color.Error">@errorMessage</MudText>
+
+    @if (weatherResults.Any())
+    {
+        <MudTable Items="weatherResults" Striped="true" Hover="true" Class="weather-table">
+            <HeaderContent>
+                <MudTh>City</MudTh>
+                <MudTh>Temp. (C)</MudTh>
+                <MudTh>Humidity</MudTh>
+                <MudTh>Condition</MudTh>
+                <MudTh>Favourite</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Main.Temp</MudTd>
+                <MudTd>@context.Main.Humidity</MudTd>
+                <MudTd>@context.Weather[0].Main</MudTd>
+                <MudTd>
+                    @if (favouriteCities.Contains(context.Name))
+                    {
+                        <MudCheckBox T="bool" @bind-Value="isChecked" @onclick="() => ToggleFavourite(context.Name, isChecked)"
+                            CheckedIcon="@Icons.Material.Filled.Favorite" UncheckedIcon="@Icons.Material.Filled.FavoriteBorder"
+                            Color="Color.Error">
+                        </MudCheckBox>
+                    }
+                    else
+                    {
+                        <MudCheckBox T="bool" @bind-Value="nisChecked"
+                            @onclick="() => ToggleFavourite(context.Name, nisChecked)"
+                            CheckedIcon="@Icons.Material.Filled.Favorite" UncheckedIcon="@Icons.Material.Filled.FavoriteBorder"
+                            Color="Color.Error">
+                        </MudCheckBox>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudText Typo="Typo.h6">@errorMessage</MudText>
+    }
+
+    @if (weatherfav.Any())
+    {
+        <MudText Typo="Typo.h5" Class="favourite-heading">Your Favourite Cities</MudText>
+        <MudTable Items="weatherfav" Striped="true" Hover="true" Class="weather-table">
+            <HeaderContent>
+                <MudTh>City</MudTh>
+                <MudTh>Temp. (C)</MudTh>
+                <MudTh>Humidity</MudTh>
+                <MudTh>Condition</MudTh>
+                <MudTh>Favourite</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Main.Temp</MudTd>
+                <MudTd>@context.Main.Humidity</MudTd>
+                <MudTd>@context.Weather[0].Main</MudTd>
+                <MudTd>
+                    @if (favouriteCities.Contains(context.Name))
+                    {
+                        <MudCheckBox T="bool" @bind-Value="isChecked" @onclick="() => ToggleFavourite(context.Name, isChecked)"
+                            CheckedIcon="@Icons.Material.Filled.Favorite" UncheckedIcon="@Icons.Material.Filled.FavoriteBorder"
+                            Color="Color.Error">
+                        </MudCheckBox>
+                    }
+                    else
+                    {
+                        <MudCheckBox T="bool" @bind-Value="nisChecked"
+                            @onclick="() => ToggleFavourite(context.Name, nisChecked)"
+                            CheckedIcon="@Icons.Material.Filled.Favorite" UncheckedIcon="@Icons.Material.Filled.FavoriteBorder"
+                            Color="Color.Error">
+                        </MudCheckBox>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudText Color="Color.Error">@errorMessage</MudText>
+    }
+</div>
+
+<style>
+    body {
+        background: linear-gradient(to right, #e0f7fa, #fffde7);
+        /* soft sky blue to light yellow */
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .weather-container {
+        max-width: 850px;
+        margin: 3rem auto;
+        padding: 2rem 3rem;
+        background-color: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        animation: fadeIn 0.6s ease-in-out;
+    }
+
+    fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .welcome-text {
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        color: #2c3e50;
+    }
+
+    .input-section {
+        margin-bottom: 2rem;
+    }
+
+    .city-input {
+        width: 100%;
+        margin-bottom: 1rem;
+        transition: box-shadow 0.3s ease-in-out;
+    }
+
+    .city-input input:focus {
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
+        /* blue outline glow */
+        border-radius: 8px;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        flex-grow: 1;
+        transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        background-color: #0288d1;
+        color: white;
+    }
+
+    .weather-table {
+        margin-top: 2rem;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .favourite-heading {
+        margin-top: 3rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        color: #00695c;
+    }
+
+    .MudTable {
+        background-color: #fafafa;
+    }
+
+    .MudCheckBox input[type="checkbox"] {
+        cursor: pointer;
+    }
+
+    .welcome-text {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-bottom: 2rem;
+    }
+
+    .welcome-text .highlight-name {
+        color: #0288d1;
+        font-weight: 800;
+    }
+
+    .subtitle {
+        display: block;
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #455a64;
+        margin-top: 0.5rem;
+    }
+
+    .input-label {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #37474f;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+
+@code {
+    private string cityName;
+    private List<WeatherResponse> weatherResults = new();
+    private List<WeatherResponse> weatherfav = new();
+    private string errorMessage;
+    private List<string> favouriteCities = new();
+    private List<string> favourites1;
+    private string UserName = string.Empty;
+    private bool isChecked = true;
+    private bool nisChecked = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //here we have to get the email and store it somewhere and use that to fetch the
+        UserName = await SigninService.GetUserName();
+        Console.WriteLine($"name:{UserName}");
+        favouriteCities = await SigninService.GetFavouritesAsync();
+        Console.WriteLine("cities already there");
+        foreach (var c in favouriteCities)
+        {
+            Console.WriteLine($"name: {c}");
+        }
+        await LoadFavourites();
+    }
+
+    private async Task GetWeather()
+    {
+        errorMessage = null;
+        try
+        {
+            string apiKey = "d44e84653bedfb2f9682a4874783732d";
+            string url = $"https://api.openweathermap.org/data/2.5/weather?q={cityName}&appid={apiKey}&units=metric";
+            var http = new HttpClient();
+            var result = await http.GetFromJsonAsync<WeatherResponse>(url);
+
+            if (result != null && !weatherResults.Any(r => r.Name == result.Name))
+            {
+                weatherResults.Add(result);
+                cityName = ""; // Clear input after success
+            }
+        }
+        catch
+        {
+            errorMessage = "City not found or API error.";
+        }
+    }
+
+    private async Task ToggleFavourite(string city, bool check)
+    {
+        if (!check)
+        {
+            if (!favouriteCities.Contains(city))
+            {
+                favouriteCities.Add(city);
+                await SaveFavourites();
+                await LoadFavourites();
+            }
+            else
+            {
+                Console.WriteLine("True and then city is in list");
+            }
+        }
+        else if (check)
+        {
+            if (favouriteCities.Contains(city))
+            {
+                favouriteCities.Remove(city);
+                weatherfav.RemoveAll(w => w.Name == city);
+                await SaveFavourites();
+            }
+            else
+            {
+                Console.WriteLine("false and city is not there");
+            }
+        }
+
+
+        Console.WriteLine("next");
+        foreach (var f in favouriteCities)
+        {
+            Console.WriteLine(f);
+        }
+    }
+
+    private async Task SaveFavourites()
+    {
+
+        bool r1 = await SigninService.UpdateProfileAsync(favouriteCities);
+        if (r1)
+        {
+            Console.WriteLine("fav list updated");
+        }
+    }
+
+    private async Task LoadFavourites()
+    {
+        favourites1 = await SigninService.GetFavouritesAsync();
+
+        foreach (var c in favourites1)
+        {
+            string apiKey = "d44e84653bedfb2f9682a4874783732d";
+            string url = $"https://api.openweathermap.org/data/2.5/weather?q={c}&appid={apiKey}&units=metric";
+            var http = new HttpClient();
+            var result = await http.GetFromJsonAsync<WeatherResponse>(url);
+
+            if (result != null && !weatherfav.Any(r => r.Name == result.Name))
+            {
+                weatherfav.Add(result);
+                cityName = ""; // Clear input after success
+            }
+        }
+    }
+
+    private async Task RemoveFromFavourites(string city)
+    {
+        favouriteCities.Remove(city);
+        weatherfav.RemoveAll(w => w.Name == city);
+        Console.WriteLine($"Removed {city} from favourites.");
+        await SaveFavourites();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var isRefresh = await JS.InvokeAsync<bool>("wasPageReloaded");
+            if (isRefresh)
+            {
+                NavigationManager.NavigateTo("/", true); // redirect to home
+            }
+        }
+    }
+}

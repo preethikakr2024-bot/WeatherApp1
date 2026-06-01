@@ -1,0 +1,14 @@
+﻿@page "/"
+<h1>Hello Preethika 👋</h1>
+<button @onclick="ShowMessage">
+    Click Me
+</button>
+<p>@message</p>
+@code {
+    string message = "";
+    void ShowMessage()
+    {
+        message = "Welcome to Blazor!";
+    }
+
+}

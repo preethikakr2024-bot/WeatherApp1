@@ -1,0 +1,129 @@
+﻿@page "/"
+@using BlazorApp12.Pages.Models
+@using MudBlazor
+@inject HttpClient Http
+@using System.Text.Json
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-5">
+
+    <MudText Typo="Typo.h4" GutterBottom="true">
+        🌤️ 5-Day Weather Forecast
+    </MudText>
+
+    <MudTextField @bind-Value="city" Label="Enter City"
+                  Variant="Variant.Outlined" Class="mb-2" />
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+               OnClick="GetForecast">
+        Get Forecast
+    </MudButton>
+
+    <br /><br />
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+
+    @if (forecasts != null && forecasts.Count > 0)
+    {
+        <MudGrid>
+            @foreach (var item in forecasts)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Class="pa-4" Elevation="4">
+
+                        <MudText Typo="Typo.h6">
+                            @item.Date.ToString("dddd")
+                        </MudText>
+
+                        <MudText>
+                            📅 @item.Date.ToShortDateString()
+                        </MudText>
+
+                        <MudText>
+                            🌡️ @item.Temp °C
+                        </MudText>
+
+                        <MudText>
+                            🌥️ @item.Description
+                        </MudText>
+
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+
+</MudContainer>
+
+@code {
+    string city = "";
+    bool isLoading = false;
+
+    List<WeatherForecast> forecasts = new();
+
+    async Task GetForecast()
+    {
+        try
+        {
+            isLoading = true;
+
+            var url =
+                $"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid=408331dc72d5ab9ef0d43490c0ef63ad&units=metric";
+
+            var result = await Http.GetFromJsonAsync<JsonElement>(url);
+
+            forecasts = new List<WeatherForecast>();
+
+            // ✅ SAFE check for "list"
+            if (!result.TryGetProperty("list", out JsonElement list))
+                return;
+
+            foreach (var item in list.EnumerateArray())
+            {
+                // ✅ SAFE DATE
+                var dtString = item.GetProperty("dt_txt").GetString();
+                if (!DateTime.TryParse(dtString, out var dt))
+                    continue;
+
+                // ✅ SAFE TEMP
+                if (!item.TryGetProperty("main", out JsonElement main))
+                    continue;
+
+                var temp = main.GetProperty("temp").GetDouble();
+
+                // ✅ SAFE DESCRIPTION
+                string desc = "";
+                if (item.TryGetProperty("weather", out JsonElement weatherArray) &&
+                    weatherArray.GetArrayLength() > 0)
+                {
+                    desc = weatherArray[0]
+                        .GetProperty("description")
+                        .GetString() ?? "";
+                }
+
+                forecasts.Add(new WeatherForecast
+                {
+                    Date = dt,
+                    Temp = temp,
+                    Description = desc
+                });
+            }
+
+            forecasts = forecasts
+                .GroupBy(x => x.Date.Date)
+                .Select(g => g.First())
+                .Take(5)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

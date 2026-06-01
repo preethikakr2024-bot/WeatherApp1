@@ -1,0 +1,51 @@
+﻿@page "/allparams"
+@rendermode InteractiveServer
+
+<h1>All Parameter Types Demo</h1>
+
+<ParameterCard Name="Preethika"
+               Age="20"
+               Marks="89.5"
+               IsActive="true"
+               JoiningDate="@DateTime.Now"
+               StudentData="@student"
+               Subjects="@subjects"
+               OnButtonClick="ShowMessage">
+
+    <h3 style="color:blue">
+        This is Child Content
+    </h3>
+
+</ParameterCard>
+
+<p>@message</p>
+
+@code {
+
+    string message = "";
+
+    List<string> subjects = new()
+    {
+        "Maths",
+        "Science",
+        "Computer Science"
+    };
+
+    Student student = new()
+    {
+        Name = "Preethika",
+        Age = 20
+    };
+
+    void ShowMessage()
+    {
+        message = "Button Clicked!";
+    }
+
+    public class Student
+    {
+        public string Name { get; set; } = "";
+
+        public int Age { get; set; }
+    }
+}

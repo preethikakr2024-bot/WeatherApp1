@@ -1,0 +1,21 @@
+/* like.css */
+
+input.like {
+    display: none;
+    justify-content: center;
+}
+
+input.like + label {
+    font-size: 24px;
+    color: grey;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+input.like:checked + label {
+    color: red;
+}
+
+.heart-icon::before {
+    content: "♥";
+}

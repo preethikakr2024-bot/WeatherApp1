@@ -1,0 +1,17 @@
+﻿@page "/Condition"
+@rendermode InteractiveServer
+<button @onclick="Increase">
+    Increase
+</button>
+<p>Count: @count</p>
+@if (count >= 5)
+{
+    <h3>🎉 Count reached 5!</h3>
+}
+@code {
+    int count = 0;
+    void Increase()
+    {
+        count++;
+    }
+}

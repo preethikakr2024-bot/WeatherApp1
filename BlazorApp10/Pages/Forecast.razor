@@ -1,0 +1,83 @@
+﻿@page "/forecast"
+@using BlazorApp10.Models
+@inject HttpClient Http
+
+<MudText Typo="Typo.h4" Class="mb-4">🌦 5-Day Forecast</MudText>
+
+<MudTextField @bind-Value="city"
+              Label="Enter City"
+              Variant="Variant.Outlined" />
+
+<MudButton Variant="Variant.Filled"
+           Color="Color.Primary"
+           OnClick="GetForecast"
+           Class="mt-2">
+    Get Forecast
+</MudButton>
+
+<MudSpacer />
+
+@if (isLoading)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <MudText Color="Color.Error">@error</MudText>
+}
+else if (forecast != null)
+{
+    <MudGrid Class="mt-4">
+        @foreach (var item in forecast.list.Take(10))
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Class="pa-3">
+                    <MudText><b>Date:</b> @item.dt_txt</MudText>
+                    <MudText><b>Temp:</b> @item.main.temp °C</MudText>
+
+                    @if (item.weather.Count > 0)
+                    {
+                        <MudText>
+                            <b>Condition:</b> @item.weather[0].description
+                        </MudText>
+                    }
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    string city = "";
+    ForecastResponse? forecast = null;
+    string error = "";
+    bool isLoading = false;
+
+    async Task GetForecast()
+    {
+        try
+        {
+            isLoading = true;
+            error = "";
+            forecast = null;
+
+            var apiKey = "YOUR_API_KEY";
+
+            var url =
+            $"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={apiKey}&units=metric";
+
+            forecast = await Http.GetFromJsonAsync<ForecastResponse>(url);
+
+            if (forecast == null)
+                error = "City not found!";
+        }
+        catch
+        {
+            error = "Error fetching data!";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

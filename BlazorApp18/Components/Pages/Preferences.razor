@@ -1,0 +1,62 @@
+﻿@page "/preferences"
+
+@using BlazorApp18.Data
+@using BlazorApp18.Models
+
+@inject UserDataDbContext db
+
+<h3>User Preferences</h3>
+
+<input @bind="city" placeholder="Favorite City" />
+<br />
+<br />
+
+<input @bind="weather" placeholder="Favorite Weather" />
+<br />
+<br />
+
+<button @onclick="Save">Save</button>
+
+<p style="color:green">@successMessage</p>
+<p style="color:red">@errorMessage</p>
+
+@code {
+    string city = string.Empty;
+    string weather = string.Empty;
+
+    string successMessage = string.Empty;
+    string errorMessage = string.Empty;
+
+    async Task Save()
+    {
+        successMessage = string.Empty;
+        errorMessage = string.Empty;
+
+        // ✅ Validation
+        if (string.IsNullOrWhiteSpace(city) || string.IsNullOrWhiteSpace(weather))
+        {
+            errorMessage = "Please enter all fields.";
+            return;
+        }
+
+        try
+        {
+            var pref = new UserPreference
+            {
+                UserId = "test-user",
+                FavoriteCity = city,
+                FavoriteWeather = weather
+            };
+
+            db.UserPreferences.Add(pref);
+            await db.SaveChangesAsync();
+
+            successMessage = "Saved successfully!";
+        }
+        catch (Exception ex)
+        {
+            // 🔥 SHOW FULL ERROR (VERY IMPORTANT)
+            errorMessage = ex.ToString();
+        }
+    }
+}

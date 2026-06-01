@@ -1,0 +1,37 @@
+﻿@page "/login"
+
+@using BlazorApp14.Models
+@using BlazorApp14.Services
+@inject AuthService AuthService
+@inject NavigationManager Nav
+
+<h3>Login</h3>
+
+<input placeholder="Username" @bind="login.Username" />
+<br />
+<input placeholder="Password" type="password" @bind="login.Password" />
+<br />
+
+<button @onclick="LoginUser">Login</button>
+
+<p>@message</p>
+
+@code {
+    private LoginModel login = new();
+    private string message = "";
+
+    void LoginUser()
+    {
+        bool result = AuthService.Login(login);
+
+        if (result)
+        {
+            message = "Login Successful!";
+            Nav.NavigateTo("/");
+        }
+        else
+        {
+            message = "Invalid credentials!";
+        }
+    }
+}

@@ -1,0 +1,7 @@
+﻿.vs/
+bin/
+obj/
+*.user
+BlazorApp20/
+BlazorApp19/
+BlazorApp2/

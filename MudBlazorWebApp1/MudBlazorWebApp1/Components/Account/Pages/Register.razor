@@ -1,0 +1,157 @@
+﻿@page "/Account/Register"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using MudBlazorWebApp1.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject ILogger<Register> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Register</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Register</MudText>
+
+<MudGrid>
+    <MudItem md="6">
+        <StatusMessage Message="@Message" />
+
+        <EditForm Model="Input" OnValidSubmit="RegisterUser">
+            <DataAnnotationsValidator />
+
+            <MudText Typo="Typo.body1">Create a new account.</MudText>
+
+            <MudGrid>
+                <MudItem md="12">
+                    <MudTextField @bind-Value="Input.Email" Label="Email" Required="true" />
+                </MudItem>
+
+                <MudItem md="12">
+                    <MudTextField @bind-Value="Input.Password" Label="Password"
+                                  InputType="InputType.Password" Required="true" />
+                </MudItem>
+
+                <MudItem md="12">
+                    <MudTextField @bind-Value="Input.ConfirmPassword" Label="Confirm Password"
+                                  InputType="InputType.Password" Required="true" />
+                </MudItem>
+
+                <MudItem md="12">
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true">
+                        Register
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </MudItem>
+
+    <MudItem md="6">
+        <MudText>Use another service to register.</MudText>
+        <ExternalLoginPicker />
+    </MudItem>
+</MudGrid>
+
+@code {
+    private IEnumerable<IdentityError>? identityErrors;
+    private string? exceptionMessage;
+
+    private InputModel Input { get; set; } = new();
+
+    private string? Message =>
+        exceptionMessage ??
+        (identityErrors is null ? null :
+        $"Error: {string.Join(", ", identityErrors.Select(e => e.Description))}");
+
+    private async Task RegisterUser()
+    {
+        try
+        {
+            var user = CreateUser();
+
+            await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+
+            var emailStore = GetEmailStore();
+            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+            var result = await UserManager.CreateAsync(user, Input.Password);
+
+            if (!result.Succeeded)
+            {
+                identityErrors = result.Errors;
+                return;
+            }
+
+            Logger.LogInformation("User created a new account.");
+
+            var userId = await UserManager.GetUserIdAsync(user);
+
+            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+                new Dictionary<string, object?>
+                {
+                    ["userId"] = userId,
+                    ["code"] = code
+                });
+
+            try
+            {
+                await EmailSender.SendConfirmationLinkAsync(
+                    user,
+                    Input.Email,
+                    HtmlEncoder.Default.Encode(callbackUrl)
+                );
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Email sending failed");
+                exceptionMessage = "Account created, but failed to send confirmation email.";
+            }
+
+            await SignInManager.SignInAsync(user, isPersistent: false);
+
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Registration failed");
+            exceptionMessage = "Something went wrong. Please try again.";
+        }
+    }
+
+    private static ApplicationUser CreateUser()
+    {
+        return new ApplicationUser();
+    }
+
+    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    {
+        return (IUserEmailStore<ApplicationUser>)UserStore;
+    }
+
+    private class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        public string Password { get; set; } = "";
+
+        [Compare("Password")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}

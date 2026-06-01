@@ -1,0 +1,63 @@
+@page "/signup"
+@using BlazorApp15.Services
+@using BlazorApp15.Models
+@inject BlazorApp15.Services.AuthService authService
+@inject NavigationManager nav
+<div style="
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:80vh;
+    background:linear-gradient(to right, aqua, aqua);">
+    <div style="
+        background:white;
+        padding:30px;
+        border-radius:12px;
+        width:300px;
+        text-align:center;
+        box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <h3>?? Create Account</h3>
+        <EditForm Model="@model" OnValidSubmit="HandleRegister">
+            <InputText @bind-Value="model.Username"
+                       placeholder="?? Username"
+                       style="width:100%;padding:8px;margin-bottom:10px;border-radius:6px;border:1px solid gray;" />
+            <InputText @bind-Value="model.Password"
+                       type="password"
+                       placeholder="?? Password"
+                       style="width:100%;padding:8px;margin-bottom:15px;border-radius:6px;border:1px solid gray;" />
+            <button type="submit"
+                    style="width:100%;padding:10px;background-color:black;color:white;border:none;border-radius:6px;cursor:pointer;">
+                ?? Register
+            </button>
+        </EditForm>
+        <br />
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <p style="color:@(message.Contains("success") ? "green" : "red");">@message</p>
+        }
+        <hr />
+        <p>Already have an account? <a href="login" style="color:#2196F3;">Login</a></p>
+    </div>
+</div>
+@code {
+    private SignupModel model = new();
+    private string? message;
+    private void HandleRegister()
+    {
+        bool ok = authService.Register(model.Username, model.Password);
+        if (ok)
+        {
+            message = "Registered successfully!";
+            nav.NavigateTo("/login");
+        }
+        else
+        {
+            message = "Email already exists!";
+        }
+    }
+    public class SignupModel
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

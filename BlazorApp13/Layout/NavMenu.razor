@@ -1,0 +1,14 @@
+﻿@page "/student"
+
+<h3>Student Form</h3>
+
+<div class="mb-3">
+    <label>Name:</label>
+    <input class="form-control" @bind="name" />
+</div>
+
+<p>Hello @name</p>
+
+@code {
+    string name = "";
+}
