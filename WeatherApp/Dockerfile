@@ -1,15 +1,10 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
-EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
-
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
 COPY . .
-RUN dotnet restore "WeatherApp.csproj"
-RUN dotnet publish "WeatherApp.csproj" -c Release -o /app/publish
+RUN dotnet restore WeatherApp.csproj --no-cache
+RUN dotnet publish WeatherApp.csproj -c Release -o /app/publish
 
-FROM base AS final
-WORKDIR /app
-COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "WeatherApp.dll"]
+FROM nginx:alpine
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80
