@@ -7,9 +7,10 @@ namespace WeatherApp.Api.Services
     {
         private readonly IMongoCollection<UserFavorite> _favorites;
 
-        public MongoService(IMongoClient client)
+        public MongoService(IMongoClient client, IConfiguration config)
         {
-            var database = client.GetDatabase("WeatherApp");
+            var dbName = config["MongoDbSettings:DatabaseName"] ?? "WeatherDB";
+            var database = client.GetDatabase(dbName);
             _favorites = database.GetCollection<UserFavorite>("Favorites");
         }
 
@@ -18,7 +19,6 @@ namespace WeatherApp.Api.Services
             var existing = await _favorites
                 .Find(f => f.UserId == fav.UserId)
                 .FirstOrDefaultAsync();
-
             if (existing == null)
                 await _favorites.InsertOneAsync(fav);
             else
@@ -32,7 +32,6 @@ namespace WeatherApp.Api.Services
                 .FirstOrDefaultAsync();
         }
 
-        // ✅ Added Delete
         public async Task DeleteFavorite(string userId)
         {
             await _favorites.DeleteOneAsync(f => f.UserId == userId);
