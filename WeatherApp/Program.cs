@@ -8,10 +8,10 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<WeatherApp.Components.App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// ✅ HttpClient pointing to your live Render API
+// ✅ HttpClient - base address set to app's own origin
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://weatherapp3-d1rx.onrender.com/")
+    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
 });
 
 // ✅ Services
