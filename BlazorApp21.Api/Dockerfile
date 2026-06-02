@@ -1,15 +1,17 @@
 ﻿FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /app
 
-COPY BlazorApp21.csproj .
+COPY BlazorApp21.Api.csproj .
 RUN dotnet restore
 
 COPY . .
-RUN dotnet publish BlazorApp21.csproj -c Release -o /app/publish
+RUN dotnet publish BlazorApp21.Api.csproj -c Release -o /app/publish
 
-FROM nginx:alpine
-WORKDIR /usr/share/nginx/html
-COPY --from=build /app/publish/wwwroot .
-COPY nginx.conf /etc/nginx/nginx.conf
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build /app/publish .
 
-EXPOSE 80
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+
+ENTRYPOINT ["dotnet", "BlazorApp21.Api.dll"]

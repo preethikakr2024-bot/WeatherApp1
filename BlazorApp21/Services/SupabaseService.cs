@@ -1,30 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Supabase;
 using Supabase.Gotrue;
-using Supabase.Postgrest.Attributes;
-using Supabase.Postgrest.Models;
 
 namespace BlazorApp21.Services
 {
-    [Table("favorites")]
-    public class UserFavorite : BaseModel
-    {
-        [PrimaryKey("id", false)]
-        public string? Id { get; set; }
-
-        [Column("user_id")]
-        public string? UserId { get; set; }
-
-        [Column("city")]
-        public string? City { get; set; }
-
-        [Column("weather")]
-        public string? Weather { get; set; }
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-    }
-
     public class SupabaseService
     {
         private Supabase.Client? _client;
@@ -35,7 +14,6 @@ namespace BlazorApp21.Services
 
         public string FavoriteCity { get; set; } = string.Empty;
         public string FavoriteWeather { get; set; } = string.Empty;
-        public string LastDbError { get; set; } = string.Empty;
 
         public SupabaseService(LocalStorageService localStorage, IConfiguration config)
         {
@@ -53,7 +31,6 @@ namespace BlazorApp21.Services
                     AutoConnectRealtime = false,
                     AutoRefreshToken = true
                 };
-
                 _client = new Supabase.Client(_supabaseUrl, _supabaseKey, options);
                 await _client.InitializeAsync();
             }
@@ -116,99 +93,6 @@ namespace BlazorApp21.Services
             await _localStorage.RemoveItem(SessionKey);
             FavoriteCity = string.Empty;
             FavoriteWeather = string.Empty;
-        }
-
-        // ✅ Fixed: Delete then Insert instead of Update (avoids Where filter mismatch)
-        public async Task<string> SaveFavoriteToDb(string city, string weather)
-        {
-            await Initialize();
-
-            var userId = GetUser()?.Id;
-            if (string.IsNullOrEmpty(userId))
-                return "Error: User not logged in — GetUser() returned null";
-
-            try
-            {
-                // ✅ Delete old row first
-                await _client!
-                    .From<UserFavorite>()
-                    .Where(x => x.UserId == userId)
-                    .Delete();
-
-                // ✅ Insert fresh row
-                var favorite = new UserFavorite
-                {
-                    UserId = userId,
-                    City = city,
-                    Weather = weather
-                };
-
-                await _client!.From<UserFavorite>().Insert(favorite);
-
-                // ✅ Update in-memory
-                FavoriteCity = city;
-                FavoriteWeather = weather;
-                LastDbError = string.Empty;
-                return "Success";
-            }
-            catch (Exception ex)
-            {
-                LastDbError = ex.Message;
-                return $"Error: {ex.Message}";
-            }
-        }
-
-        // ✅ Fixed: Also updates in-memory on load
-        public async Task<UserFavorite?> LoadFavoriteFromDb()
-        {
-            await Initialize();
-            var userId = GetUser()?.Id;
-            if (string.IsNullOrEmpty(userId)) return null;
-
-            try
-            {
-                var result = await _client!
-                    .From<UserFavorite>()
-                    .Where(x => x.UserId == userId)
-                    .Get();
-
-                var favorite = result.Models.FirstOrDefault();
-
-                if (favorite != null)
-                {
-                    FavoriteCity = favorite.City ?? string.Empty;
-                    FavoriteWeather = favorite.Weather ?? string.Empty;
-                }
-
-                return favorite;
-            }
-            catch (Exception ex)
-            {
-                LastDbError = ex.Message;
-                return null;
-            }
-        }
-
-        public async Task ClearFavoriteFromDb()
-        {
-            await Initialize();
-            var userId = GetUser()?.Id;
-            if (string.IsNullOrEmpty(userId)) return;
-
-            try
-            {
-                await _client!
-                    .From<UserFavorite>()
-                    .Where(x => x.UserId == userId)
-                    .Delete();
-
-                FavoriteCity = string.Empty;
-                FavoriteWeather = string.Empty;
-            }
-            catch (Exception ex)
-            {
-                LastDbError = ex.Message;
-            }
         }
 
         public User? GetUser() => _client?.Auth.CurrentUser;
