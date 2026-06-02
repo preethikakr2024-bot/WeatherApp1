@@ -17,11 +17,11 @@ namespace WeatherApp.Services
         public async Task<bool> SaveFavorite(string userId, string city, string weather)
         {
             var favorite = new FavoriteModel
-            {
-                UserId = userId,
-                City = city,
-                Weather = weather
-            };
+{
+    UserId = userId,
+    City = city,
+    FavoriteWeather = weather  // ← was "Weather = weather"
+};
 
             var response = await _http.PostAsJsonAsync($"{_baseUrl}/api/favorite", favorite);
             return response.IsSuccessStatusCode;
@@ -53,6 +53,6 @@ namespace WeatherApp.Services
     {
         public string? UserId { get; set; }
         public string? City { get; set; }
-        public string? Weather { get; set; }
+        public string? FavoriteWeather { get; set; }  // ← was "Weather"
     }
 }
