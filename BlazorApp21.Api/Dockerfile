@@ -2,7 +2,7 @@
 WORKDIR /app
 
 COPY BlazorApp21.Api.csproj .
-RUN dotnet restore
+RUN dotnet restore --no-cache
 
 COPY . .
 RUN dotnet publish BlazorApp21.Api.csproj -c Release -o /app/publish
