@@ -1,17 +1,13 @@
 ﻿FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /app
-
 COPY BlazorApp21.Api.csproj .
-RUN dotnet restore --no-cache
-
+RUN dotnet restore --no-cache --force
 COPY . .
 RUN dotnet publish BlazorApp21.Api.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/publish .
-
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
-
 ENTRYPOINT ["dotnet", "BlazorApp21.Api.dll"]
