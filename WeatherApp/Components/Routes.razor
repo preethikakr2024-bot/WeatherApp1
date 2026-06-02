@@ -1,0 +1,13 @@
+﻿@using WeatherApp.Layout
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData"
+                   DefaultLayout="@typeof(WeatherApp.Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(WeatherApp.Layout.MainLayout)">
+            <p>Sorry, nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
