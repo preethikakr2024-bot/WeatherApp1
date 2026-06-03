@@ -15,11 +15,26 @@ namespace WeatherApp.Api.Controllers
             _mongo = mongo;
         }
 
+        private void AddCorsHeaders()
+        {
+            Response.Headers["Access-Control-Allow-Origin"] = "*";
+            Response.Headers["Access-Control-Allow-Headers"] = "*";
+            Response.Headers["Access-Control-Allow-Methods"] = "*";
+        }
+
+        [HttpOptions]
+        [HttpOptions("{userId}")]
+        public IActionResult Preflight()
+        {
+            AddCorsHeaders();
+            return Ok();
+        }
+
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] UserFavorite fav)
         {
-            if (fav == null)
-                return BadRequest("Favorite cannot be null");
+            AddCorsHeaders();
+            if (fav == null) return BadRequest("Favorite cannot be null");
             await _mongo.SaveFavorite(fav);
             return Ok(new { message = "Saved successfully" });
         }
@@ -27,18 +42,17 @@ namespace WeatherApp.Api.Controllers
         [HttpGet("{userId}")]
         public async Task<IActionResult> Get(string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-                return BadRequest("UserId is required");
+            AddCorsHeaders();
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("UserId is required");
             var data = await _mongo.GetFavorite(userId);
             return Ok(data);
         }
 
-        // ✅ Added Delete endpoint
         [HttpDelete("{userId}")]
         public async Task<IActionResult> Delete(string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-                return BadRequest("UserId is required");
+            AddCorsHeaders();
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("UserId is required");
             await _mongo.DeleteFavorite(userId);
             return Ok(new { message = "Deleted successfully" });
         }
