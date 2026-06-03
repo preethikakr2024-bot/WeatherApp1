@@ -163,14 +163,18 @@
                 var userId = supabaseService.GetUser()?.Id ?? "";
 
                 // Load favorites from MongoDB via FavoriteApiService
-                var favorite = await favoriteApiService.GetFavorite(userId);
-                if (favorite != null)
-                {
-                    supabaseService.FavoriteCity    = favorite.City    ?? "";
-                    supabaseService.FavoriteWeather = favorite.Weather ?? "";
-                    await localStorage.SetItem("favoriteCity",    supabaseService.FavoriteCity);
-                    await localStorage.SetItem("favoriteWeather", supabaseService.FavoriteWeather);
-                }
+               // Find this section in Dashboard.razor (around line 123-126):
+var favorite = await favoriteApiService.GetFavorite(userId);
+if (favorite != null)
+{
+    supabaseService.FavoriteCity    = favorite.City    ?? "";
+    
+    // CHANGE THIS LINE FROM .Weather TO .weather:
+    supabaseService.FavoriteWeather = favorite.FavoriteWeather ?? ""; 
+    
+    await localStorage.SetItem("favoriteCity",    supabaseService.FavoriteCity);
+    await localStorage.SetItem("favoriteWeather", supabaseService.FavoriteWeather);
+}
                 else
                 {
                     // Fallback to localStorage
