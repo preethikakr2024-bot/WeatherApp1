@@ -19,7 +19,7 @@ namespace WeatherApp.Api.Controllers
         {
             Response.Headers["Access-Control-Allow-Origin"] = "*";
             Response.Headers["Access-Control-Allow-Headers"] = "*";
-            Response.Headers["Access-Control-Allow-Methods"] = "*";
+            Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS";
         }
 
         [HttpOptions]
