@@ -71,9 +71,10 @@
         collapseNavMenu = !collapseNavMenu;
     }
 
-    private void Logout()
+    // Change 'private void' to 'private async Task' and add 'await'
+    private async Task Logout()
     {
-        authService.Logout();
+        await authService.Logout();
     }
 
     protected override void OnInitialized()
@@ -85,4 +86,5 @@
     {
         authService.OnChange -= StateHasChanged;
     }
+}
 }
