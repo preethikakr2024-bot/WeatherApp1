@@ -14,7 +14,7 @@ var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
 builder.Services.AddSingleton<MongoService>();
 
-// ✅ Allow any origin temporarily to fix CORS
+// ✅ Allow any origin to fix CORS
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -25,10 +25,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// ✅ CORS must be before everything
+app.UseCors();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseCors();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
