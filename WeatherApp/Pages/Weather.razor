@@ -614,7 +614,7 @@
         StateHasChanged();
 
         await Task.Delay(1000);
-        nav.NavigateTo("/dashboard", forceLoad: true);
+        nav.NavigateTo("/dashboard");
     }
 
     public class ForecastResponse { public List<ForecastItem>? list { get; set; } }

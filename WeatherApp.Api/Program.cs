@@ -14,18 +14,20 @@ var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
 builder.Services.AddSingleton<MongoService>();
 
-// ✅ Allow any origin to fix CORS
+// ✅ Secure and Explicit CORS Setup
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.AllowAnyOrigin()
+    {
+        policy.WithOrigins("https://weatherapp-afrontend.onrender.com") // Your exact frontend URL
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod();
+    });
 });
 
 var app = builder.Build();
 
-// ✅ CORS must be before everything
+// ✅ CORS applied right at the start of the HTTP pipeline
 app.UseCors();
 
 app.UseSwagger();
@@ -33,4 +35,5 @@ app.UseSwaggerUI();
 
 app.UseAuthorization();
 app.MapControllers();
+
 app.Run();
