@@ -1,5 +1,6 @@
 ﻿@page "/dashboard"
 @using System.Text.RegularExpressions
+@using WeatherApp.Models
 @inject SupabaseService supabaseService
 @inject FavoriteApiService favoriteApiService
 @inject NavigationManager nav
@@ -162,22 +163,16 @@
                 userEmail = supabaseService.GetUser()?.Email ?? "";
                 var userId = supabaseService.GetUser()?.Id ?? "";
 
-                // Load favorites from MongoDB via FavoriteApiService
-               // Find this section in Dashboard.razor (around line 123-126):
-var favorite = await favoriteApiService.GetFavorite(userId);
-if (favorite != null)
-{
-    supabaseService.FavoriteCity    = favorite.City    ?? "";
-    
-    // CHANGE THIS LINE FROM .Weather TO .weather:
-    supabaseService.FavoriteWeather = favorite.FavoriteWeather ?? ""; 
-    
-    await localStorage.SetItem("favoriteCity",    supabaseService.FavoriteCity);
-    await localStorage.SetItem("favoriteWeather", supabaseService.FavoriteWeather);
-}
+                var favorite = await favoriteApiService.GetFavorite(userId);
+                if (favorite != null)
+                {
+                    supabaseService.FavoriteCity    = favorite.City ?? "";
+                    supabaseService.FavoriteWeather = favorite.FavoriteWeather ?? "";
+                    await localStorage.SetItem("favoriteCity",    supabaseService.FavoriteCity);
+                    await localStorage.SetItem("favoriteWeather", supabaseService.FavoriteWeather);
+                }
                 else
                 {
-                    // Fallback to localStorage
                     var savedCity    = await localStorage.GetItem("favoriteCity");
                     var savedWeather = await localStorage.GetItem("favoriteWeather");
                     if (!string.IsNullOrEmpty(savedCity))    supabaseService.FavoriteCity    = savedCity;
@@ -222,7 +217,6 @@ if (favorite != null)
         isSaving = true;
         StateHasChanged();
 
-        // Verify city via OpenWeather API
         try
         {
             var apiKey = config["OpenWeather:ApiKey"];
@@ -250,8 +244,6 @@ if (favorite != null)
         }
 
         var userId = supabaseService.GetUser()?.Id ?? "";
-
-        // Save to MongoDB via FavoriteApiService
         var saved = await favoriteApiService.SaveFavorite(userId, newCity.Trim(), newWeather.Trim());
 
         if (!saved)
@@ -264,11 +256,8 @@ if (favorite != null)
             return;
         }
 
-        // Update in-memory state
         supabaseService.FavoriteCity    = newCity.Trim();
         supabaseService.FavoriteWeather = newWeather.Trim();
-
-        // Save to localStorage as backup
         await localStorage.SetItem("favoriteCity",    newCity.Trim());
         await localStorage.SetItem("favoriteWeather", newWeather.Trim());
 
@@ -285,18 +274,11 @@ if (favorite != null)
     async Task ClearFavorites()
     {
         var userId = supabaseService.GetUser()?.Id ?? "";
-
-        // Clear from MongoDB via FavoriteApiService
         await favoriteApiService.ClearFavorite(userId);
-
-        // Clear in-memory state
         supabaseService.FavoriteCity    = "";
         supabaseService.FavoriteWeather = "";
-
-        // Clear localStorage
         await localStorage.RemoveItem("favoriteCity");
         await localStorage.RemoveItem("favoriteWeather");
-
         updateMessage = "";
         cityError     = "";
         Snackbar.Add("Favorites cleared!", Severity.Info);

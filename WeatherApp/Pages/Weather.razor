@@ -1,6 +1,7 @@
 ﻿@page "/weather"
 @inject HttpClient http
 @inject SupabaseService supabaseService
+@inject FavoriteApiService favoriteApiService
 @inject NavigationManager nav
 @inject ISnackbar Snackbar
 @inject LocalStorageService localStorage
@@ -98,6 +99,7 @@
         top: 85%;
         left: 15%;
     }
+
     .weather-page-bg > .mud-container {
         position: relative;
         z-index: 1;
@@ -321,7 +323,6 @@
     <div class="cloud cloud-8"></div>
 
     <MudContainer MaxWidth="MaxWidth.Large">
-
         <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-1"
                  Style="color:#1a3a5c; font-weight:800; letter-spacing:1px;">
             🌤️ Weather Forecast
@@ -442,7 +443,6 @@
                 </MudAlert>
             }
         }
-
     </MudContainer>
 </div>
 
@@ -491,13 +491,11 @@
         {
             await supabaseService.Initialize();
             isLoggedIn = supabaseService.IsLoggedIn();
-
             if (!isLoggedIn)
             {
                 await Task.Delay(500);
                 isLoggedIn = supabaseService.IsLoggedIn();
             }
-
             StateHasChanged();
         }
     }
@@ -579,6 +577,7 @@
         }
     }
 
+    // ✅ FIXED: Now saves to MongoDB via FavoriteApiService
     async Task SaveFavorite()
     {
         if (string.IsNullOrWhiteSpace(city) || forecastList == null)
@@ -589,9 +588,23 @@
         }
 
         var condition = forecastList.FirstOrDefault()?.weather?[0]?.main ?? "Unknown";
+        var userId = supabaseService.GetUser()?.Id ?? "";
+
+        // ✅ Save to MongoDB
+        var saved = await favoriteApiService.SaveFavorite(userId, city, condition);
+
+        if (!saved)
+        {
+            Snackbar.Add("Failed to save to MongoDB!", Severity.Error);
+            message = "Failed to save favorite. Try again.";
+            alertSeverity = Severity.Error;
+            StateHasChanged();
+            return;
+        }
+
+        // ✅ Update in-memory + localStorage
         supabaseService.FavoriteCity = city;
         supabaseService.FavoriteWeather = condition;
-
         await localStorage.SetItem("favoriteCity", city);
         await localStorage.SetItem("favoriteWeather", condition);
 

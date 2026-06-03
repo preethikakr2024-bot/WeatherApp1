@@ -17,13 +17,12 @@ namespace WeatherApp.Services
         public async Task<bool> SaveFavorite(string userId, string city, string weather)
         {
             var favorite = new FavoriteModel
-{
-    UserId = userId,
-    City = city,
-    FavoriteWeather = weather  // ← was "Weather = weather"
-};
-
-            var response = await _http.PostAsJsonAsync($"{_baseUrl}/api/favorite", favorite);
+            {
+                UserId = userId,
+                City = city,
+                FavoriteWeather = weather
+            };
+            var response = await _http.PostAsJsonAsync($"{_baseUrl}/api/Favorite", favorite);
             return response.IsSuccessStatusCode;
         }
 
@@ -31,7 +30,7 @@ namespace WeatherApp.Services
         {
             try
             {
-                var response = await _http.GetAsync($"{_baseUrl}/api/favorite/{userId}");
+                var response = await _http.GetAsync($"{_baseUrl}/api/Favorite/{userId}");
                 if (response.IsSuccessStatusCode)
                     return await response.Content.ReadFromJsonAsync<FavoriteModel>();
                 return null;
@@ -44,15 +43,8 @@ namespace WeatherApp.Services
 
         public async Task<bool> ClearFavorite(string userId)
         {
-            var response = await _http.DeleteAsync($"{_baseUrl}/api/favorite/{userId}");
+            var response = await _http.DeleteAsync($"{_baseUrl}/api/Favorite/{userId}");
             return response.IsSuccessStatusCode;
         }
-    }
-
-    public class FavoriteModel
-    {
-        public string? UserId { get; set; }
-        public string? City { get; set; }
-        public string? FavoriteWeather { get; set; }  // ← was "Weather"
     }
 }
