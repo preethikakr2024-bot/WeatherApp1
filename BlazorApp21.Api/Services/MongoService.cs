@@ -22,7 +22,10 @@ namespace BlazorApp21.Api.Services
             if (existing == null)
                 await _favorites.InsertOneAsync(fav);
             else
+            {
+                fav.Id = existing.Id;
                 await _favorites.ReplaceOneAsync(f => f.UserId == fav.UserId, fav);
+            }
         }
 
         public async Task<UserFavorite?> GetFavorite(string userId)

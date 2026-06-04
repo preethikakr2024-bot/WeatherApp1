@@ -167,7 +167,7 @@
                 if (favorite != null)
                 {
                     supabaseService.FavoriteCity    = favorite.City    ?? "";
-                    supabaseService.FavoriteWeather = favorite.Weather ?? "";
+                    supabaseService.FavoriteWeather = favorite.FavoriteWeather ?? "";
                     await localStorage.SetItem("favoriteCity",    supabaseService.FavoriteCity);
                     await localStorage.SetItem("favoriteWeather", supabaseService.FavoriteWeather);
                 }

@@ -20,7 +20,7 @@ namespace BlazorApp21.Services
             {
                 UserId = userId,
                 City = city,
-                Weather = weather
+                FavoriteWeather = weather
             };
 
             var response = await _http.PostAsJsonAsync($"{_baseUrl}/api/favorite", favorite);
@@ -48,11 +48,11 @@ namespace BlazorApp21.Services
             return response.IsSuccessStatusCode;
         }
     }
-
     public class FavoriteModel
     {
         public string? UserId { get; set; }
         public string? City { get; set; }
-        public string? Weather { get; set; }
+        public string? FavoriteWeather { get; set; }  // ← fixed
     }
+
 }

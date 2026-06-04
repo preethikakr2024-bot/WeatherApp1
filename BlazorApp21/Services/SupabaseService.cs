@@ -39,7 +39,7 @@ namespace BlazorApp21.Services
             {
                 try
                 {
-                    var savedSession = await _localStorage.GetItem(SessionKey);
+                    var savedSession = await _localStorage.GetSessionItem(SessionKey);
                     if (!string.IsNullOrEmpty(savedSession))
                     {
                         var session = System.Text.Json.JsonSerializer.Deserialize<Session>(savedSession);
@@ -70,7 +70,7 @@ namespace BlazorApp21.Services
             if (session != null)
             {
                 var json = System.Text.Json.JsonSerializer.Serialize(session);
-                await _localStorage.SetItem(SessionKey, json);
+                await _localStorage.SetSessionItem(SessionKey, json);
             }
 
             return session;
